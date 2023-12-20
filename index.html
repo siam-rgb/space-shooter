@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Shooter Game</title>
+    <style>
+        canvas {
+            display: block;
+            margin: auto;
+            border: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Space Shooter Game</h1>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const spaceship = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 40,
+            height: 40,
+            speed: 5
+        };
+
+        const bullets = [];
+        const asteroids = [];
+
+        // Touch controls
+        let touchStartX = 0;
+
+        canvas.addEventListener("touchstart", touchStartHandler);
+        canvas.addEventListener("touchmove", touchMoveHandler);
+
+        function touchStartHandler(e) {
+            touchStartX = e.touches[0].clientX;
+            e.preventDefault(); // Prevent default touch behavior
+        }
+
+        function touchMoveHandler(e) {
+            const touchX = e.touches[0].clientX;
+            const deltaX = touchX - touchStartX;
+
+            // Adjust the spaceship's position based on touch movement
+            spaceship.x += deltaX * 0.05;
+
+            touchStartX = touchX;
+            e.preventDefault(); // Prevent default touch behavior
+        }
+
+        function drawSpaceship() {
+            ctx.beginPath();
+            ctx.rect(spaceship.x, spaceship.y, spaceship.width, spaceship.height);
+            ctx.fillStyle = "#0095DD";
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawBullets() {
+            for (let i = 0; i < bullets.length; i++) {
+                ctx.beginPath();
+                ctx.arc(bullets[i].x, bullets[i].y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = "#FF0000";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function drawAsteroids() {
+            for (let i = 0; i < asteroids.length; i++) {
+                ctx.beginPath();
+                ctx.arc(asteroids[i].x, asteroids[i].y, asteroids[i].radius, 0, Math.PI * 2);
+                ctx.fillStyle = "#888888";
+                ctx.fill();
+                ctx.closePath();
+            }
+        }
+
+        function collisionDetection() {
+            for (let i = 0; i < bullets.length; i++) {
+                for (let j = 0; j < asteroids.length; j++) {
+                    const dx = bullets[i].x - asteroids[j].x;
+                    const dy = bullets[i].y - asteroids[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+
+                    if (distance < asteroids[j].radius) {
+                        bullets.splice(i, 1);
+                        asteroids.splice(j, 1);
+                        break;
+                    }
+                }
+            }
+        }
+
+        function moveAsteroids() {
+            for (let i = 0; i < asteroids.length; i++) {
+                asteroids[i].y += asteroids[i].speed;
+
+                if (asteroids[i].y > canvas.height) {
+                    asteroids.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            drawSpaceship();
+            drawBullets();
+            drawAsteroids();
+
+            collisionDetection();
+            moveAsteroids();
+
+            requestAnimationFrame(draw);
+        }
+
+        // Start the game loop
+        draw();
+
+        // Asteroid creation loop
+        setInterval(() => {
+            const asteroidRadius = Math.random() * 20 + 10;
+            const asteroidX = Math.random() * (canvas.width - 2 * asteroidRadius) + asteroidRadius;
+            const asteroidSpeed = Math.random() * 2 + 1;
+
+            asteroids.push({
+                x: asteroidX,
+                y: -asteroidRadius,
+                radius: asteroidRadius,
+                speed: asteroidSpeed
+            });
+        }, 2000);
+    </script>
+
+</body>
+</html>
